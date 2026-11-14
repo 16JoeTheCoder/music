@@ -1,0 +1,2 @@
+# Copy to .dev.vars for localhost development only; never set on production.
+DEV_AUTH_BYPASS=true
