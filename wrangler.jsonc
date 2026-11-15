@@ -16,7 +16,7 @@
     {
       "binding": "DB",
       "database_name": "music",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "database_id": "4fd0a8d7-973a-4374-b490-cf6a438785f2",
       "migrations_dir": "migrations",
     },
   ],
