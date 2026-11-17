@@ -16,14 +16,9 @@
     {
       "binding": "DB",
       "database_name": "music",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "database_id": "4fd0a8d7-973a-4374-b490-cf6a438785f2",
       "migrations_dir": "migrations",
     },
   ],
   "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "private-music" }],
-  "vars": {
-    "ACCESS_ISSUER": "https://YOUR-TEAM.cloudflareaccess.com",
-    "ACCESS_AUDIENCE": "REPLACE_WITH_ACCESS_APPLICATION_AUDIENCE",
-    "ALLOWED_EMAIL": "you@example.com",
-  },
 }
