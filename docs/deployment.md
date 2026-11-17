@@ -51,7 +51,15 @@ Keep independent copies of original audio outside R2. Export D1 using [Cloudflar
 
 ## Upload and format limits
 
-The API accepts one audio file per upload, up to 25 MiB, plus optional artwork up to 5 MiB. The total multipart request has a 31 MiB limit, including form overhead; Cloudflare's own request limits can also apply. Audio is recognized by its file signature for MP3, FLAC, Ogg, WAV, MP4-family and WebM; artwork supports JPEG, PNG and WebP. Recognition does not guarantee your browser can decode the audio. Uploads parse multipart data in the Worker, so large files may fail under runtime resource limits even below the cap. Playlists are limited to 1,000 tracks each by the API.
+The main client uses authenticated8MiB multipart uploads to the existing private R2 bucket, with an enforced4GiB per-file cap. This avoids whole-file buffering in the Worker. The legacy multipart-form endpoint remains limited to25MiB audio plus5MiB artwork and31MiB total request. New artwork uploads remain limited to5MiB. Audio signatures identify MP3, FLAC, Ogg, WAV, MP4-family and WebM containers; actual codec playback depends on the browser. No transcoding is performed. Tests cover multipart objects above8MiB; production4GiB and real Android behavior remain unverified. See [features](features.md).
+
+## Upgrade to Still Plus
+
+Back up the existing D1 database and private R2 originals. Apply the committed migrations to the existing database before merging/deploying the release branch. The new migration is additive: favorites/tags/ReplayGain columns, upload sessions, smart playlists, a playback-state row, restore idempotency keys and pending object cleanup. Do not reset the database. Verify your actual database ID and existing binding names before running `npm run db:migrate:remote` from an authenticated local checkout or Cloudflare's authorized build environment. This operation changes production schema but does not deploy the Worker.
+
+Then merge the release branch into the production branch used by Workers Builds. Keep Build=`npm run build` and Deploy=`npx wrangler deploy`. No new R2 bucket, D1 database, Access audience, secrets, CORS policy or public URL is required. Upload requests remain same-origin and authenticated; do not enable public R2 access or direct unauthenticated uploads. Keep the default seven-day incomplete-multipart lifecycle, or a longer one; old sessions are restarted by the client. Theme packages and sound preferences live in browser storage, not new Cloudflare bindings.
+
+Validate theme import/export, a file above25MiB with interrupted/retried upload, cross-part seeking, paused offline download retry, backup restore into isolated resources, and handoff between two authenticated devices before trusting the upgrade with your only copy of music.
 
 ## Costs and limits
 
@@ -88,4 +96,4 @@ Before adding a real library, verify with a small, non-sensitive test file:
 
 Production Cloudflare resources, the Access policy, domain routing, billing checkout, and real Android installation have not been configured or tested here. Local automated tests use Miniflare D1/R2 and signed test JWTs with a mocked JWKS endpoint. Service-worker routing is tested in a simulated worker environment; this does not establish real browser installation, storage eviction behavior, codec support, background playback, or Access-session expiry on a phone. The managed browser preview relay timed out, so desktop/mobile visual and interaction checks could not be completed.
 
-The 25 MiB audio cap is an enforced application limit, not a verified production capacity claim. Larger files are intentionally rejected; a multipart design would be needed for them. Local downloads remain device-local after server deletion on another device until removed or site storage is cleared. Simultaneous tabs/devices may race history clearing with in-flight listening-history submissions; pause playback and close other tabs when clearing history if a strict cutoff matters. This app has no remote erase mechanism for offline copies.
+The4GiB multipart cap is an enforced application limit, not a verified production capacity claim. Large-file production tests are still required. Local downloads remain device-local after server deletion on another device until removed or site storage is cleared. Simultaneous tabs/devices may race history clearing with in-flight listening-history submissions; pause playback and close other tabs when clearing history if a strict cutoff matters. This app has no remote erase mechanism for offline copies.

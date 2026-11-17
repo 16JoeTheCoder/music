@@ -24,3 +24,9 @@ Run `npm run check` for type checking, tests, and a production build. A successf
 Music is stored in your private R2 bucket and served through the authenticated Worker, never a public bucket URL. Access protects the network service, but a downloaded track remains on the device in browser-managed storage. It is not encrypted by Still and may be readable by someone with access to that browser profile or device. Clearing site data, browser eviction, a lost device, or private browsing may remove downloads. Device operating-system encryption and a locked account help protect local copies. See [deployment and privacy](docs/deployment.md) for limitations and backup guidance.
 
 See [test evidence and verification limits](docs/testing.md) for coverage and checks still required on your deployed domain.
+
+## Still Plus
+
+Importable Light/Code/custom themes, resumable multipart uploads and offline downloads, a persistent queue, albums/artists/favorites/tags, smart playlists, portable backup/restore, sleep/focus sessions, three-band EQ and ReplayGain attenuation, next-track preloading, and explicit device handoff are implemented. See [feature behavior and limitations](docs/features.md) and [theme authoring context](docs/themes/THEME_AUTHORING.md).
+
+Existing installations must apply `migrations/0002_still_plus.sql` to the existing D1 database before deploying this release. No new storage bindings, secrets or public buckets are needed. Keep deployment through Cloudflare's GitHub connection.

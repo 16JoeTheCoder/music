@@ -1,0 +1,21 @@
+{
+  "format": "still-theme",
+  "version": 1,
+  "id": "still-code",
+  "name": "Still Code",
+  "mode": "dark",
+  "colors": {
+    "background": "#101419",
+    "surface": "#171e26",
+    "raised": "#202a35",
+    "text": "#e6edf3",
+    "muted": "#a6b6c8",
+    "border": "#455365",
+    "accent": "#8bd5b4",
+    "accentText": "#10251c",
+    "danger": "#ff9da5",
+    "focus": "#8bbcff"
+  },
+  "font": "mono",
+  "radius": 8
+}

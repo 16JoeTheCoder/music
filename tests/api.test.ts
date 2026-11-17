@@ -1,6 +1,7 @@
 import { beforeAll, afterAll, describe, expect, it } from "vitest";
 import { Miniflare } from "miniflare";
 import { build } from "esbuild";
+import schema2 from "../migrations/0002_still_plus.sql?raw";
 import schema from "../migrations/0001_initial.sql?raw";
 import { parseRange, sniffAudio } from "../server/index";
 
@@ -63,6 +64,7 @@ describe("worker with D1 and R2", () => {
     });
     const db = await mf.getD1Database("DB");
     await db.exec(schema);
+    await db.exec(schema2);
   });
   afterAll(async () => {
     await mf?.dispose();

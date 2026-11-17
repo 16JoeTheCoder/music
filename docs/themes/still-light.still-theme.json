@@ -1,0 +1,21 @@
+{
+  "format": "still-theme",
+  "version": 1,
+  "id": "still-light",
+  "name": "Still Light",
+  "mode": "light",
+  "colors": {
+    "background": "#f7f6f0",
+    "surface": "#efeee7",
+    "raised": "#ffffff",
+    "text": "#252d26",
+    "muted": "#536051",
+    "border": "#c7cfc4",
+    "accent": "#365644",
+    "accentText": "#ffffff",
+    "danger": "#a12a31",
+    "focus": "#346fcb"
+  },
+  "font": "sans",
+  "radius": 12
+}
