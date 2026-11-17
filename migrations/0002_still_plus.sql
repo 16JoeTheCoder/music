@@ -1,0 +1,11 @@
+ALTER TABLE tracks ADD COLUMN favorite INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE tracks ADD COLUMN tags TEXT NOT NULL DEFAULT '[]';
+ALTER TABLE tracks ADD COLUMN replay_gain REAL;
+CREATE TABLE uploads (id TEXT PRIMARY KEY, object_key TEXT NOT NULL, upload_id TEXT NOT NULL, metadata TEXT NOT NULL, size INTEGER NOT NULL, parts TEXT NOT NULL DEFAULT '{}', mime TEXT, created_at TEXT NOT NULL, track_id TEXT);
+CREATE TABLE player_state (id INTEGER PRIMARY KEY CHECK(id=1), revision INTEGER NOT NULL DEFAULT 0, state TEXT NOT NULL, updated_at TEXT NOT NULL);
+CREATE TABLE smart_playlists (id TEXT PRIMARY KEY, name TEXT NOT NULL, rules TEXT NOT NULL);
+ALTER TABLE playlists ADD COLUMN restore_key TEXT;
+CREATE UNIQUE INDEX playlists_restore_key ON playlists(restore_key);
+ALTER TABLE smart_playlists ADD COLUMN restore_key TEXT;
+CREATE UNIQUE INDEX smart_restore_key ON smart_playlists(restore_key);
+CREATE TABLE object_cleanup (object_key TEXT PRIMARY KEY);

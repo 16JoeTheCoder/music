@@ -1,3 +1,4 @@
+import { features } from "./features";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 
 export interface Env {
@@ -53,6 +54,9 @@ const expose = (t: Track) => ({
   size: t.size,
   createdAt: t.created_at,
   hasArt: !!t.art_key,
+  favorite: !!(t as any).favorite,
+  tags: JSON.parse((t as any).tags || "[]"),
+  replayGain: (t as any).replay_gain ?? null,
 });
 const issuerKeys = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 
@@ -167,6 +171,13 @@ async function track(db: D1Database, id: string): Promise<Track | null> {
 }
 async function cleanup(env: Env, t: Track) {
   try {
+    const current = await env.DB.prepare(
+      "SELECT * FROM tracks WHERE id=? AND deleted_at IS NOT NULL",
+    )
+      .bind(t.id)
+      .first<Track>();
+    if (!current) return;
+    t = current;
     await env.BUCKET.delete([t.audio_key, ...(t.art_key ? [t.art_key] : [])]);
     await env.DB.prepare(
       "DELETE FROM tracks WHERE id = ? AND deleted_at IS NOT NULL",
@@ -229,6 +240,8 @@ async function api(
     path = url.pathname,
     method = request.method;
   ctx.waitUntil(retryCleanup(env).catch(() => {}));
+  const featureResponse = await features(request, env, sniffAudio);
+  if (featureResponse) return featureResponse;
   if (path === "/api/tracks" && method === "GET") {
     const rows = await env.DB.prepare(
       "SELECT * FROM tracks WHERE deleted_at IS NULL ORDER BY created_at DESC",
@@ -437,6 +450,11 @@ async function api(
       });
       if (isAudio) headers.set("Accept-Ranges", "bytes");
       headers.set("Content-Length", String(range ? range.length : object.size));
+      if (url.searchParams.get("download") === "1")
+        headers.set(
+          "Content-Disposition",
+          `attachment; filename="${t.id}.${isAudio ? { "audio/mpeg": "mp3", "audio/mp4": "m4a", "audio/flac": "flac", "audio/wav": "wav", "audio/ogg": "ogg", "audio/webm": "webm" }[t.mime] || "audio" : "cover"}"`,
+        );
       if (range)
         headers.set(
           "Content-Range",
@@ -471,10 +489,23 @@ async function api(
     const b = await bodyJson(request),
       name = typeof b?.name === "string" ? b.name.trim() : "";
     if (!name || name.length > 100) return err("Invalid playlist name");
+    const restoreKey = b.restoreKey;
+    if (restoreKey !== undefined && !validId(restoreKey))
+      return err("Invalid restore key");
+    if (restoreKey) {
+      const old = await env.DB.prepare(
+        "SELECT * FROM playlists WHERE restore_key=?",
+      )
+        .bind(restoreKey)
+        .first<any>();
+      if (old) return json({ playlist: { ...old, trackIds: [] } });
+    }
     const id = crypto.randomUUID(),
       now = iso();
-    await env.DB.prepare("INSERT INTO playlists VALUES (?,?,?,?)")
-      .bind(id, name, now, now)
+    await env.DB.prepare(
+      "INSERT INTO playlists(id,name,created_at,updated_at,restore_key) VALUES (?,?,?,?,?)",
+    )
+      .bind(id, name, now, now, restoreKey || null)
       .run();
     return json(
       { playlist: { id, name, createdAt: now, updatedAt: now, trackIds: [] } },
@@ -595,7 +626,9 @@ export default {
     if (url.pathname === "/api" || url.pathname.startsWith("/api/")) {
       try {
         return await api(request, env, ctx);
-      } catch {
+      } catch (e: any) {
+        if (e?.status === 400 || e?.status === 413)
+          return err(e.message, e.status);
         return err("Internal server error", 500);
       }
     }
